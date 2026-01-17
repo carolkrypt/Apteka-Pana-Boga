@@ -29,7 +29,8 @@ st.markdown("""
     section[data-testid="stSidebar"] li, 
     section[data-testid="stSidebar"] h1, 
     section[data-testid="stSidebar"] h2, 
-    section[data-testid="stSidebar"] h3 {
+    section[data-testid="stSidebar"] h3,
+    section[data-testid="stSidebar"] span {
         color: #2c3e28 !important; /* Ciemna zieleń */
     }
 
@@ -185,3 +186,64 @@ with st.sidebar:
         **⚠️ Nota prawna:**
         Treści mają charakter edukacyjny i opierają się na literaturze ludowej z XX wieku. Nie zastępują porady lekarza.
         """
+    )
+    st.markdown("---")
+    st.caption("Autor: Karol hagiroshyy | Powered by Gemini Pro")
+
+# --- 7. Główny Ekran ---
+st.title("🌿 Apteka Pana Boga")
+
+# --- NOWY TEKST POWITALNY ---
+st.markdown("""
+<div style="background-color: #f0f7ee; padding: 20px; border-radius: 10px; border-left: 5px solid #5d9c4b; margin-bottom: 25px;">
+    <h3 style="margin-top: 0; color: #2c5e1e;">Witaj serdecznie w wirtualnej Aptece Pana Boga! 🌿</h3>
+    <p style="font-size: 1.05rem; color: #333;">
+        Bardzo dziękuję, że zdecydowałeś się skorzystać z tego asystenta. 
+        Jego autorem jest <b>Karol hagiroshyy</b>, który stworzył to narzędzie, aby ułatwić Ci szybki dostęp do sprawdzonej wiedzy Marii Treben.
+    </p>
+    <p style="font-size: 1.05rem; color: #333;">
+        Jestem gotowy do pomocy. Napisz po prostu, co Ci dolega (np. <i>"bóle pleców"</i>, <i>"problemy z żołądkiem"</i>), 
+        a wspólnie znajdziemy odpowiednią kurację ziołową.
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+# Formularz
+with st.form("diagnosis_form"):
+    user_query = st.text_area(
+        "Opisz tutaj swoje dolegliwości:",
+        placeholder="Wpisz objawy, np. zgaga, ból wątroby, łuszczyca...",
+        height=100
+    )
+    submit_button = st.form_submit_button("🔍 Znajdź Kurację", type="primary")
+
+# Logika
+if submit_button and user_query:
+    if len(user_query) < 3:
+        st.warning("Proszę wpisać co najmniej jedno słowo określające dolegliwość.")
+    else:
+        with st.spinner('Kartkuję "Aptekę Pana Boga"...'):
+            try:
+                full_prompt = f"{SYSTEM_PROMPT}\n\nPACJENT ZGŁASZA: {user_query}"
+                response = model.generate_content(full_prompt)
+                
+                clean_response, plant_names = get_plant_images(response.text)
+
+                # Wyświetlenie karty z wynikiem
+                st.markdown(f"""
+                <div class="result-card">
+                    {clean_response}
+                </div>
+                """, unsafe_allow_html=True)
+
+                # Zdjęcia
+                if plant_names:
+                    st.markdown("### 📸 Zioła w tej kuracji:")
+                    cols = st.columns(len(plant_names))
+                    for i, plant_name in enumerate(plant_names):
+                        img_url = f"https://tse2.mm.bing.net/th?q={plant_name.replace(' ', '+')}+botanical+photo&w=300&h=300&c=7&rs=1&p=0&dpr=3&pid=1.7&mkt=en-US&adlt=moderate"
+                        with cols[i]:
+                            st.image(img_url, caption=plant_name, use_column_width=True)
+
+            except Exception as e:
+                st.error(f"Wystąpił błąd połączenia: {e}")
