@@ -8,36 +8,37 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- 2. CSS (Style - Wersja Premium z cieniami i kartami) ---
+# --- 2. CSS (Style - Poprawione kolory alertów) ---
 st.markdown("""
 <style>
-    /* TŁO APLIKACJI - Delikatny gradient */
+    /* TŁO APLIKACJI */
     .stApp {
         background: linear-gradient(to bottom right, #f2f7f0, #ffffff);
         color: #1a4011;
     }
 
-    /* NAGŁÓWKI - Szeryfowe, eleganckie */
+    /* NAGŁÓWKI */
     h1, h2, h3, h4 {
         color: #2c5e1e !important;
         font-family: 'Georgia', serif;
         text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
     }
 
-    /* POLE TEKSTOWE - Efekt poświaty */
+    /* POLE TEKSTOWE */
     .stTextArea textarea {
         background-color: #ffffff;
         border: 2px solid #dde6d5;
         border-radius: 12px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         transition: all 0.3s ease;
+        color: #1a4011 !important; /* Wymuszamy ciemny tekst w polu pisania */
     }
     .stTextArea textarea:focus {
         border-color: #6c9e5b;
         box-shadow: 0 0 15px rgba(108, 158, 91, 0.3);
     }
 
-    /* PRZYCISK - Wygląd 3D */
+    /* PRZYCISK */
     .stButton button {
         background: linear-gradient(to bottom, #4e8c3e, #3a6b2e);
         color: white;
@@ -52,11 +53,25 @@ st.markdown("""
         transform: translateY(-2px);
         box-shadow: 0 6px 15px rgba(46, 107, 30, 0.4);
     }
-    .stButton button:active {
-        transform: translateY(1px);
+
+    /* --- NAPRAWA ŻÓŁTEGO POLA I PASKÓW BOCZNYCH --- */
+    /* To wymusza ciemny kolor tekstu wewnątrz ostrzeżeń (st.warning) i info (st.info) */
+    div[data-testid="stAlert"] {
+        color: #000000 !important; 
+    }
+    div[data-testid="stAlert"] p {
+        color: #000000 !important;
+    }
+    
+    /* Zapewnienie widoczności tekstu w sidebarze */
+    [data-testid="stSidebar"] {
+        color: #1a4011 !important;
+    }
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] li {
+        color: #1a4011 !important;
     }
 
-    /* KARTA WYNIKU - To daje efekt "papieru" */
+    /* KARTA WYNIKU */
     .result-card {
         background-color: white;
         padding: 30px;
@@ -66,18 +81,12 @@ st.markdown("""
         margin-top: 20px;
         font-family: 'Helvetica', sans-serif;
         line-height: 1.6;
-        color: #2d332a;
+        color: #2d332a; /* Ciemny szary dla czytelności */
     }
 
     /* Ukrywamy linki pod obrazkami */
     .stMarkdown a {
         display: none;
-    }
-    
-    /* Pasek boczny */
-    [data-testid="stSidebar"] {
-        background-color: #fcfdfa;
-        border-right: 1px solid #efeve6;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -131,15 +140,12 @@ Format: "NAZWY_LACIŃSKIE: Nazwa1, Nazwa2"
 
 # --- 5. Funkcja pomocnicza do obrazków ---
 def get_plant_images(text):
-    image_markdown = ""
     try:
         if "NAZWY_LACIŃSKIE:" in text:
-            latin_line = text.split("NAZWY_LACIŃSKIE:")[1].strip().split("\n")[0]
+            parts = text.split("NAZWY_LACIŃSKIE:")
+            clean_text = parts[0]
+            latin_line = parts[1].strip().split("\n")[0]
             plant_names = [name.strip() for name in latin_line.split(",")]
-
-            # Tworzymy sekcję obrazków, ale nie wyświetlamy jej od razu, tylko zwracamy
-            # Zwracamy też listę nazw, żeby wiedzieć, ile kolumn stworzyć
-            clean_text = text.split("### 7. ZIOŁA W TEJ KURACJI")[0]
             return clean_text, plant_names
     except Exception:
         return text, []
@@ -196,18 +202,19 @@ if submit_button and user_query:
 
                 st.success("Kuracja została przygotowana.")
                 
-                # WYŚWIETLANIE WYNIKU W "KARCIE" (Styl .result-card)
+                # WYŚWIETLANIE WYNIKU W "KARCIE"
                 st.markdown(f"""
                 <div class="result-card">
                     {clean_response}
                 </div>
                 """, unsafe_allow_html=True)
 
-                # WYŚWIETLANIE ZDJĘĆ NA DOLE
+                # WYŚWIETLANIE ZDJĘĆ
                 if plant_names:
                     st.markdown("### 📸 Zioła w tej kuracji:")
                     cols = st.columns(len(plant_names))
                     for i, plant_name in enumerate(plant_names):
+                        # Bing Images Thumbnail API (Safe & Free)
                         img_url = f"https://tse2.mm.bing.net/th?q={plant_name.replace(' ', '+')}+botanical+photo&w=300&h=300&c=7&rs=1&p=0&dpr=3&pid=1.7&mkt=en-US&adlt=moderate"
                         with cols[i]:
                             st.image(img_url, caption=plant_name, use_column_width=True)
