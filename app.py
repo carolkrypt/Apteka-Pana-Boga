@@ -114,7 +114,7 @@ st.markdown("""
 # --- 3. Konfiguracja API Google ---
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-pro')
+    model = genai.GenerativeModel('gemini-1.5-flash')
 except Exception:
     st.error("BŁĄD: Brakuje klucza API. Upewnij się, że ustawiłeś 'GEMINI_API_KEY' w Streamlit Secrets.")
     st.stop()
