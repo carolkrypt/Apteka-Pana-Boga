@@ -1,8 +1,7 @@
 import streamlit as st
 import os
 
-# --- 0. WYMUSZENIE AKTUALIZACJI (HACK NA BŁĘDY 404) ---
-# To naprawia problem, gdy serwer Streamlit "udaje", że nie widzi modeli.
+# --- 1. WYMUSZENIE AKTUALIZACJI (HACK) ---
 try:
     os.system('pip install -U google-generativeai')
 except:
@@ -10,7 +9,7 @@ except:
 
 import google.generativeai as genai
 
-# --- 1. KONFIGURACJA STRONY ---
+# --- 2. KONFIGURACJA STRONY ---
 st.set_page_config(
     page_title="Apteka Pana Boga - Asystent",
     page_icon="🌿",
@@ -18,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS (NOWA SZATA GRAFICZNA - JASNA I CZYSTA) ---
+# --- 3. CSS (NOWA SZATA GRAFICZNA - JASNA I CZYSTA) ---
 st.markdown("""
 <style>
     /* RESET: Wymuszenie jasnego tła (Paper Style) */
@@ -86,29 +85,24 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. KONFIGURACJA API I MODELU ---
+# --- 4. KONFIGURACJA API I MODELU ---
 try:
     if "GEMINI_API_KEY" in st.secrets:
         genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
         
-        # TU JEST KLUCZ DO SUKCESU:
-        # Używamy modelu 'gemini-pro-latest'. 
-        # Był on na Twojej liście diagnostycznej, więc NIE ZWRÓCI błędu 404.
-        # Jest to model "myślący" (PRO), idealny do Twojego promptu.
-        model = genai.GenerativeModel('gemini-pro-latest')
+        # --- ZMIANA NA MODEL, KTÓRY U CIEBIE DZIAŁA ---
+        # Wracamy do 'gemini-flash-latest', bo 'pro' ma limit=0 na Twoim koncie.
+        # Flash jest wystarczająco mądry do tego zadania!
+        model = genai.GenerativeModel('gemini-flash-latest')
         
     else:
         st.error("⚠️ Brak klucza API w Secrets. Uzupełnij go w ustawieniach aplikacji.")
         st.stop()
 except Exception as e:
-    # Fallback - gdyby jednak coś poszło nie tak, próba awaryjna
-    try:
-        model = genai.GenerativeModel('gemini-flash-latest')
-    except:
-        st.error(f"Błąd połączenia: {e}")
-        st.stop()
+    st.error(f"Błąd połączenia: {e}")
+    st.stop()
 
-# --- 4. TWÓJ PROMPT (Ten, który działa najlepiej) ---
+# --- 5. TWÓJ PROMPT (Ten, który działa najlepiej) ---
 SYSTEM_PROMPT = """
 Jesteś zaawansowanym systemem eksperckim dedykowanym wyłącznie wiedzy zawartej w książce Marii Treben pt. "Apteka Pana Boga". 
 
@@ -146,7 +140,7 @@ Na samym końcu, w osobnej linii:
 "NAZWY_LACIŃSKIE: Nazwa1, Nazwa2"
 """
 
-# --- 5. FUNKCJA POMOCNICZA ---
+# --- 6. FUNKCJA POMOCNICZA ---
 def get_plant_images(text):
     try:
         if "NAZWY_LACIŃSKIE:" in text:
@@ -159,7 +153,7 @@ def get_plant_images(text):
         return text, []
     return text, []
 
-# --- 6. PASEK BOCZNY ---
+# --- 7. PASEK BOCZNY ---
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/herbal-medicine.png", width=80)
     st.header("📖 O Projekcie")
@@ -178,12 +172,12 @@ with st.sidebar:
         """
     )
     st.markdown("---")
-    st.caption("Autor: Karol hagiroshyy | Silnik: Gemini Pro Latest")
+    st.caption("Autor: Karol hagiroshyy | Silnik: Gemini Flash Latest")
 
-# --- 7. GŁÓWNY EKRAN ---
+# --- 8. GŁÓWNY EKRAN ---
 st.markdown("<h1 style='color: #2c4a22;'>🌿 Apteka Pana Boga</h1>", unsafe_allow_html=True)
 
-# Nowy tekst powitalny (Twój)
+# Tekst powitalny
 st.markdown("""
 <div style="background-color: #f0f7ee; padding: 20px; border-radius: 10px; border-left: 5px solid #6da356; margin-bottom: 25px; color: #1a2e12;">
     <h3 style="margin-top: 0; color: #2c4a22;">Witaj serdecznie w wirtualnej Aptece Pana Boga! 🌿</h3>
@@ -214,7 +208,7 @@ if submit_button and user_query:
     if len(user_query) < 3:
         st.warning("Proszę wpisać co najmniej jedno słowo określające dolegliwość.")
     else:
-        with st.spinner('Kartkuję "Aptekę Pana Boga" (analiza Gemini Pro)...'):
+        with st.spinner('Kartkuję "Aptekę Pana Boga" (analiza Gemini Flash)...'):
             try:
                 full_prompt = f"{SYSTEM_PROMPT}\n\nPACJENT ZGŁASZA: {user_query}"
                 response = model.generate_content(full_prompt)
@@ -241,5 +235,3 @@ if submit_button and user_query:
             except Exception as e:
                 st.error("Wystąpił błąd połączenia.")
                 st.error(f"Szczegóły: {e}")
-                if "404" in str(e):
-                     st.info("Wskazówka: Twoje konto może wymagać innej nazwy modelu. Spróbuj zmienić 'gemini-pro-latest' na 'gemini-flash-latest' w kodzie.")
