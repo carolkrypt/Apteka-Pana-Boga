@@ -3,91 +3,110 @@ import google.generativeai as genai
 
 # --- 1. Konfiguracja strony ---
 st.set_page_config(
-    page_title="Wirtualny Zielarz Marii Treben",
+    page_title="Apteka Pana Boga - Asystent",
     page_icon="🌿",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS (Style - Poprawione kolory alertów) ---
+# --- 2. CSS (Style - WYMUSZENIE JASNEGO MOTYWU I POPRAWA KOLORÓW) ---
 st.markdown("""
 <style>
-    /* TŁO APLIKACJI */
+    /* 1. GŁÓWNE TŁO - Jasny beż/złamana biel (niezależnie od trybu dark mode) */
     .stApp {
-        background: linear-gradient(to bottom right, #f2f7f0, #ffffff);
+        background-color: #fcfdfa;
+        background-image: linear-gradient(to bottom right, #fcfdfa, #f0f4ec);
         color: #1a4011;
     }
 
-    /* NAGŁÓWKI */
+    /* 2. SIDEBAR (Pasek boczny) - Wymuszamy jasne tło */
+    section[data-testid="stSidebar"] {
+        background-color: #e6ebe0 !important; /* Jasna zieleń */
+        border-right: 1px solid #d1d9cc;
+    }
+    /* Tekst w sidebarze */
+    section[data-testid="stSidebar"] p, 
+    section[data-testid="stSidebar"] li, 
+    section[data-testid="stSidebar"] h1, 
+    section[data-testid="stSidebar"] h2, 
+    section[data-testid="stSidebar"] h3 {
+        color: #2c3e28 !important; /* Ciemna zieleń */
+    }
+
+    /* 3. ALERTY (Niebieskie i Żółte pola) - Naprawa kolorów */
+    /* Info (Niebieskie) */
+    div[data-testid="stInfo"] {
+        background-color: #e8f4f8 !important;
+        color: #0f3c4b !important;
+        border: 1px solid #b8dae6;
+    }
+    /* Warning (Żółte) */
+    div[data-testid="stWarning"] {
+        background-color: #fff9e6 !important;
+        color: #5c4b12 !important;
+        border: 1px solid #faecc2;
+    }
+    /* Tekst wewnątrz alertów */
+    div[data-testid="stAlert"] p {
+        color: inherit !important;
+    }
+
+    /* 4. NAGŁÓWKI */
     h1, h2, h3, h4 {
         color: #2c5e1e !important;
         font-family: 'Georgia', serif;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
     }
 
-    /* POLE TEKSTOWE */
+    /* 5. POLE TEKSTOWE */
     .stTextArea textarea {
-        background-color: #ffffff;
-        border: 2px solid #dde6d5;
+        background-color: #ffffff !important;
+        color: #000000 !important; /* Zawsze czarny tekst */
+        border: 2px solid #dde6d5 !important;
         border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        transition: all 0.3s ease;
-        color: #1a4011 !important; /* Wymuszamy ciemny tekst w polu pisania */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
     .stTextArea textarea:focus {
-        border-color: #6c9e5b;
-        box-shadow: 0 0 15px rgba(108, 158, 91, 0.3);
+        border-color: #6c9e5b !important;
+        box-shadow: 0 0 10px rgba(108, 158, 91, 0.2) !important;
+    }
+    /* Etykieta nad polem tekstowym */
+    .stTextArea label {
+        color: #2c5e1e !important;
+        font-weight: bold;
     }
 
-    /* PRZYCISK */
+    /* 6. PRZYCISK */
     .stButton button {
-        background: linear-gradient(to bottom, #4e8c3e, #3a6b2e);
-        color: white;
+        background: linear-gradient(to bottom, #5d9c4b, #3e7a2e) !important;
+        color: white !important;
         border: none;
-        border-radius: 30px;
-        padding: 10px 25px;
+        border-radius: 25px;
+        padding: 10px 30px;
         font-weight: bold;
-        box-shadow: 0 4px 10px rgba(46, 107, 30, 0.3);
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     .stButton button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(46, 107, 30, 0.4);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
     }
 
-    /* --- NAPRAWA ŻÓŁTEGO POLA I PASKÓW BOCZNYCH --- */
-    /* To wymusza ciemny kolor tekstu wewnątrz ostrzeżeń (st.warning) i info (st.info) */
-    div[data-testid="stAlert"] {
-        color: #000000 !important; 
-    }
-    div[data-testid="stAlert"] p {
-        color: #000000 !important;
-    }
-    
-    /* Zapewnienie widoczności tekstu w sidebarze */
-    [data-testid="stSidebar"] {
-        color: #1a4011 !important;
-    }
-    [data-testid="stSidebar"] p, [data-testid="stSidebar"] li {
-        color: #1a4011 !important;
-    }
-
-    /* KARTA WYNIKU */
+    /* 7. KARTA WYNIKU */
     .result-card {
-        background-color: white;
-        padding: 30px;
+        background-color: #ffffff;
+        padding: 40px;
         border-radius: 15px;
-        border-left: 6px solid #4e8c3e;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        border: 1px solid #e0e6da;
+        border-left: 8px solid #5d9c4b; /* Zielony akcent */
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
         margin-top: 20px;
         font-family: 'Helvetica', sans-serif;
-        line-height: 1.6;
-        color: #2d332a; /* Ciemny szary dla czytelności */
+        line-height: 1.7;
+        color: #333333;
     }
 
-    /* Ukrywamy linki pod obrazkami */
-    .stMarkdown a {
-        display: none;
-    }
+    /* Ukrycie linków */
+    .stMarkdown a { display: none; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -107,38 +126,37 @@ TWOJE ŹRÓDŁO WIEDZY:
 Korzystasz ze swojej wewnętrznej wiedzy treningowej na temat tej książki. Znasz jej treść "na pamięć". Nie wymyślaj niczego, co nie zostało napisane przez Marię Treben. Jeśli autorka nie podała lekarstwa na daną chorobę, poinformuj o tym uczciwie.
 
 ZASADA NACZELNA:
-Użytkownik otrzymuje gotową instrukcję "krok po kroku". Nie odsyłaj do ogólnych źródeł. Ty jesteś źródłem.
+Użytkownik otrzymuje gotową instrukcję "krok po kroku".
 
 STRUKTURA ODPOWIEDZI (WYMAGANA):
 Użyj pogrubionych nagłówków dla każdej sekcji.
 
 ### 1. DIAGNOZA I GŁÓWNA KURACJA
 - Wskaż konkretne rośliny lub mieszanki.
-- Krótko wyjaśnij "dlaczego" (wg autorki).
+- Krótko wyjaśnij "dlaczego".
 
 ### 2. PRECYZYJNY PROCES PRZYGOTOWANIA (Krok po kroku)
-- Zdefiniuj proces fizyczny: CZY TO NAPAR (czas parzenia)? CZY MACERAT NA ZIMNO (np. tatarak/jemioła)? CZY ODWAR?
+- Zdefiniuj proces fizyczny: NAPAR, MACERAT NA ZIMNO czy ODWAR?
 - Podaj dokładne proporcje.
 
 ### 3. DAWKOWANIE I METODYKA SPOŻYWANIA
-- Ile razy dziennie? Kiedy (przed/po posiłku)? Temperatura.
+- Ile razy dziennie? Kiedy? Temperatura.
 
 ### 4. TERAPIA WSPOMAGAJĄCA
-- Okłady z Ziół Szwedzkich (dokładna instrukcja), kąpiele, dieta (jeśli dotyczy).
+- Okłady, kąpiele, dieta (jeśli dotyczy).
 
-### 5. POZYSKIWANIE SUROWCA I KONTROLA JAKOŚCI
-- Świeże vs Suszone.
-- Instrukcja jak rozpoznać dobre zioło.
+### 5. KONTROLA JAKOŚCI ZIOŁA
+- Jak rozpoznać dobre zioło.
 
 ### 6. CZAS KURACJI
 - Szacowany czas leczenia.
 
-### 7. ZIOŁA W TEJ KURACJI (Techniczne - dla obrazów)
-Na samym końcu, w osobnej linii, wypisz po przecinku TYLKO łacińskie nazwy głównych ziół użytych w tej kuracji.
-Format: "NAZWY_LACIŃSKIE: Nazwa1, Nazwa2"
+### 7. ZIOŁA W TEJ KURACJI (Techniczne)
+Na samym końcu, w osobnej linii:
+"NAZWY_LACIŃSKIE: Nazwa1, Nazwa2"
 """
 
-# --- 5. Funkcja pomocnicza do obrazków ---
+# --- 5. Funkcja pomocnicza ---
 def get_plant_images(text):
     try:
         if "NAZWY_LACIŃSKIE:" in text:
@@ -153,71 +171,17 @@ def get_plant_images(text):
 
 # --- 6. Pasek Boczny (Sidebar) ---
 with st.sidebar:
-    st.header("📖 O Aplikacji")
+    st.header("📖 O Projekcie")
+    
     st.info(
         """
-        To narzędzie to Twój osobisty asystent oparty na książce **"Apteka Pana Boga"**.
-        
-        **Jak to działa?**
-        System analizuje Twoje objawy i dobiera kurację zgodnie z zaleceniami Marii Treben (lata 80. XX wieku).
+        **Idea projektu:**
+        Aplikacja powstała, aby ocalić od zapomnienia starą wiedzę zielarską i podać ją w nowoczesnej, łatwo dostępnej formie.
         """
     )
+    
     st.warning(
         """
-        **⚠️ Ważne:**
-        Aplikacja ma charakter edukacyjny. Porady pochodzą z literatury ludowej. Nie zastępują wizyty u lekarza!
+        **⚠️ Nota prawna:**
+        Treści mają charakter edukacyjny i opierają się na literaturze ludowej z XX wieku. Nie zastępują porady lekarza.
         """
-    )
-    st.markdown("---")
-    st.caption("Powered by Gemini Pro & Streamlit")
-
-# --- 7. Główny Ekran ---
-st.title("🌿 Wirtualny Zielarz")
-st.subheader("Według Marii Treben")
-
-st.markdown("""
-Wpisz poniżej, co Ci dolega. System przeanalizuje metody leczenia opisane w *"Aptece Pana Boga"* i dobierze odpowiednie zioła (wraz z instrukcją parzenia).
-""")
-
-# Formularz
-with st.form("diagnosis_form"):
-    user_query = st.text_area(
-        "Opisz dolegliwości:",
-        placeholder="np. bóle jelit, stłuszczona wątroba, problemy skórne...",
-        height=130
-    )
-    submit_button = st.form_submit_button("🔍 Znajdź Kurację", type="primary")
-
-# Logika po kliknięciu
-if submit_button and user_query:
-    if len(user_query) < 3:
-        st.warning("Opisz problem nieco dokładniej.")
-    else:
-        with st.spinner('Przeszukuję zapiski Marii Treben...'):
-            try:
-                full_prompt = f"{SYSTEM_PROMPT}\n\nPACJENT ZGŁASZA: {user_query}"
-                response = model.generate_content(full_prompt)
-                
-                clean_response, plant_names = get_plant_images(response.text)
-
-                st.success("Kuracja została przygotowana.")
-                
-                # WYŚWIETLANIE WYNIKU W "KARCIE"
-                st.markdown(f"""
-                <div class="result-card">
-                    {clean_response}
-                </div>
-                """, unsafe_allow_html=True)
-
-                # WYŚWIETLANIE ZDJĘĆ
-                if plant_names:
-                    st.markdown("### 📸 Zioła w tej kuracji:")
-                    cols = st.columns(len(plant_names))
-                    for i, plant_name in enumerate(plant_names):
-                        # Bing Images Thumbnail API (Safe & Free)
-                        img_url = f"https://tse2.mm.bing.net/th?q={plant_name.replace(' ', '+')}+botanical+photo&w=300&h=300&c=7&rs=1&p=0&dpr=3&pid=1.7&mkt=en-US&adlt=moderate"
-                        with cols[i]:
-                            st.image(img_url, caption=plant_name, use_column_width=True)
-
-            except Exception as e:
-                st.error(f"Wystąpił błąd: {e}")
